@@ -1,0 +1,1 @@
+Note - should have the "Carleton-EMG-python-computer-code" folder in your python path so that these applications can access the classification / interpolation / training programs 
