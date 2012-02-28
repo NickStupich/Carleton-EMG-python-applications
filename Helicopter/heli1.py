@@ -151,7 +151,7 @@ class CaveGeneration():
 			
 		return (self.top, self.top + self.caveHeight)
 		
-controlType = ControlType.MUSCLE_ANALOG
+controlType = ControlType.KEYBOARD
 
 pygame.init()
 
@@ -209,15 +209,11 @@ while True:	#keep repeating the game until the user wants to quit
 		#draw the heli
 		windowSurfaceObj.blit(heliImg, (HELI_X, SCREEN_HEIGHT - heliHeight))
 		
-		#draw the cave
-		pixArr = pygame.PixelArray(windowSurfaceObj)
-		
 		for x in range(SCREEN_WIDTH):
 			slice = caveSpots[(caveIndex+x) % SCREEN_WIDTH]
-			for y in range(slice[0]) + range(slice[1], SCREEN_HEIGHT):
-				pixArr[x][y] = caveColor
-		del pixArr
-				
+			pygame.draw.line(windowSurfaceObj, caveColor, (x, 0), (x, slice[0]))
+			pygame.draw.line(windowSurfaceObj, caveColor, (x, slice[1]), (x, SCREEN_HEIGHT))
+		
 		scoreSurface = fontObj.render(str(score), False, scoreColor)
 		scoreRect = scoreSurface.get_rect()
 		scoreRect.topleft = (10, 10)
