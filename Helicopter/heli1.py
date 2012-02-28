@@ -4,6 +4,8 @@ import random
 from datetime import datetime
 import time
 import continuousMuscleTesting
+import binaryMuscleTesting
+import functools
 
 def quit():
 	controls.quit()
@@ -128,14 +130,55 @@ class AnalogMuscleControls():
 		
 class DigitalMuscleControls():
 	def __init__(self):
-		#train the system
-		pass
-	
+		#get the user to train the system
+		self.data = []
+		self.channel = 1
+		
+		displayString('Connecting to Bluetooth...')
+		
+		self.ser = continuousMuscleTesting.SerialCommunication(self.__trainCallback)	
+		self.ser.Start(1<<(self.channel-1))	#single channel, specified above
+		
+		displayString('Tap the SPACE Key a few times')
+		
+		#wait until we have enough examples of both outputs
+		while True:
+			outputs = map(lambda x: x[1][0], self.data)
+			posCount = sum(outputs)
+			negCount = len(outputs) - sum(outputs)
+			if min(posCount, negCount) > 50:
+				break
+				
+		self.ser.Stop()
+		self.ser = None
+		
+		displayString('Got enough data, training the system')
+		time.sleep(1)
+		
+		self.model = binaryMuscleTesting.getModelFromData(self.data)
+		
+		self.classifyFunction = functools.partial(binaryMuscleTesting.module.classifyFunction, self.model,callback = self.__testCallback)
+		
+		self.currentInput = None
+		self.ser = continuousMuscleTesting.SerialCommunication(self.__testCallback)	
+		self.ser.Start(1<<(self.channel-1))	#single channel, specified above
+		
+		#wait for the system to start up and give some input
+		while not self.currentInput:
+			time.sleep(0.1)
+		
+	def __trainCallback(self, input):
+		output = binaryMuscleTesting.keyListener.getSpecificKeyOutput(' ')
+		self.data.append((input, [output]))
+		
+	def __testCallback(self, input):
+		self.currentInput = input[0]
+		
 	def getUpAccel(self, events = []):
-		pass
+		return self.currentInput
 		
 	def quit(self):
-		pass
+		self.ser.Stop()
 		
 class CaveGeneration():
 	def __init__(self):
@@ -151,7 +194,7 @@ class CaveGeneration():
 			
 		return (self.top, self.top + self.caveHeight)
 		
-controlType = ControlType.KEYBOARD
+controlType = ControlType.MUSCLE_ANALOG
 
 pygame.init()
 
