@@ -5,6 +5,19 @@ from datetime import datetime
 import time
 import continuousMuscleTesting
 
+def quit():
+	controls.quit()
+	pygame.quit()
+	sys.exit()
+
+def displayString(s):
+	windowSurfaceObj.fill(backgroundColor)
+	surface = fontObj.render(s, False, scoreColor)
+	disp_rect = surface.get_rect()
+	disp_rect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+	windowSurfaceObj.blit(surface, disp_rect)
+	pygame.display.update()
+	
 class ControlType():
 	KEYBOARD = 1
 	MUSCLE_ANALOG = 2
@@ -21,20 +34,15 @@ class KeyboardControls():
 			elif event.type == KEYUP and event.key == K_SPACE:
 				self.isDown = 0
 				
-				
 		return float(self.isDown)
 		
-def displayString(s):
-	windowSurfaceObj.fill(backgroundColor)
-	surface = fontObj.render(s, False, scoreColor)
-	disp_rect = surface.get_rect()
-	disp_rect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-	windowSurfaceObj.blit(surface, disp_rect)
-	pygame.display.update()
+	def quit(self):
+		pass
 		
 class AnalogMuscleControls():
 	def __init__(self):
 		#channel to use
+		displayString('Connecting to Microcontroller...')
 		self.channel = 1
 		
 		#strings to show user
@@ -54,7 +62,7 @@ class AnalogMuscleControls():
 		self.saveData = False
 		
 		self.ser = continuousMuscleTesting.SerialCommunication(self.__trainCallback)	
-		self.ser.Start(1<<channel)	#single channel, specified above
+		self.ser.Start(1<<self.channel)	#single channel, specified above
 		
 		for message, output in messageAndOutputs:
 			for deciSecondsLeft in range(warnTime * 10, 0, -1):
@@ -68,14 +76,38 @@ class AnalogMuscleControls():
 			time.sleep(gatherTime)
 			
 			self.saveData = False
-			
+		
+		self.ser.Stop()
+		self.ser = None
+		
 		displayString(message_complete)
+		time.sleep(2)#to make sure the system has released the bluetooth connection
 		
 		self.model = continuousMuscleTesting.getModelFromData(self.data)
 		
-		self.currentInput = [] 	#just to have something there
-		self.ser = continuousMuscleTesting.SerialCommunication(self.__testCallback)	
-		self.ser.Start(1<<channel)	#single channel, specified above
+		self.currentInput = None 	#just to have something there
+		self.connected = False
+		for _ in range(3):	
+			try:
+				self.ser = continuousMuscleTesting.SerialCommunication(self.__testCallback)	
+				self.ser.Start(1<<(self.channel))	#single channel, specified above
+				self.connected = True
+				while not self.currentInput:	#wait for data to show up before we start trying to process that data
+					time.sleep(0.1)
+					
+				break
+			except Exception, e:
+				print e
+				time.sleep(1)
+				
+		if not self.connected:
+			displayString('Failed to reconnect')
+			time.sleep(1)
+			quit()
+			
+	def quit(self):
+		if self.ser:
+			self.ser.Stop()
 	
 	def __trainCallback(self, input):
 		self.data.append((input, self.currentOutput))
@@ -85,7 +117,7 @@ class AnalogMuscleControls():
 		self.currentInput = input
 		
 	def getUpAccel(self, events = []):
-		output = self.model.classifyFunction(self.currentInput)
+		output = self.model.getOutput(self.currentInput)
 		tenseness = output[0]
 		if tenseness < 0:
 			tenseness = 0
@@ -100,6 +132,9 @@ class DigitalMuscleControls():
 		pass
 	
 	def getUpAccel(self, events = []):
+		pass
+		
+	def quit(self):
 		pass
 		
 class CaveGeneration():
@@ -192,12 +227,10 @@ while True:	#keep repeating the game until the user wants to quit
 		events = pygame.event.get()
 		for event in events:
 			if event.type == QUIT:
-				pygame.quit()
-				sys.exit()
+				quit()
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
-					pygame.quit()
-					sys.exit()
+					quit()
 		
 		#get movement of copter
 		accel = controls.getUpAccel(events) - DOWN_ACCEL
@@ -252,12 +285,10 @@ while True:	#keep repeating the game until the user wants to quit
 		events = pygame.event.get()
 		for event in events:
 			if event.type == QUIT:
-				pygame.quit()
-				sys.exit()
+				quit()
 			elif event.type == KEYDOWN:
 				if event.key == K_ESCAPE:
-					pygame.quit()
-					sys.exit()
+					quit()
 				elif event.key == K_RETURN:
 					replay = True
 				
