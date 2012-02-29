@@ -155,8 +155,8 @@ class DigitalMuscleControls():
 		displayString('Got enough data, training the system')
 		time.sleep(1)
 		
+		binaryMuscleTesting.saveTrainingData(self.data, 'digitalTrainingData.txt')
 		self.model = binaryMuscleTesting.getModelFromData(self.data)
-		
 		self.classifyFunction = functools.partial(binaryMuscleTesting.module.classifyFunction, self.model,callback = self.__testCallback)
 		
 		self.currentInput = None
@@ -194,7 +194,9 @@ class CaveGeneration():
 			
 		return (self.top, self.top + self.caveHeight)
 		
-controlType = ControlType.MUSCLE_ANALOG
+controlType = ControlType.KEYBOARD
+#controlType = ControlType.MUSCLE_ANALOG
+#controlType = ControlType.MUSCLE_DIGITAL
 
 pygame.init()
 
@@ -210,12 +212,19 @@ DOWN_ACCEL = 0.5
 CAVE_SLOPE = 0.01
 HELI_MAX_SPEED = 5
 
+POWER_PADDING = 20
+POWER_WIDTH = 100
+POWER_HEIGHT = 30
+POWER_OUTLINE_THICKNESS = 3
+
 windowSurfaceObj = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Helicopter')
 
 backgroundColor = pygame.Color(0, 0, 0)
 caveColor = pygame.Color(0, 255, 0)
 scoreColor = pygame.Color(255, 0, 0)
+powerOutlineColor = pygame.Color(255, 0, 255)
+powerColor = pygame.Color(255, 0, 0)
 fontObj = pygame.font.Font('freesansbold.ttf', 32)
 smallFontObj = pygame.font.Font('freesansbold.ttf', 20)
 
@@ -246,6 +255,7 @@ while True:	#keep repeating the game until the user wants to quit
 	while True:
 		elapsed = (datetime.now() - startTime)
 		score = int(elapsed.total_seconds() * 10 + elapsed.microseconds / 100000)
+		
 		#draw stuff
 		windowSurfaceObj.fill(backgroundColor)
 		
@@ -262,6 +272,8 @@ while True:	#keep repeating the game until the user wants to quit
 		scoreRect.topleft = (10, 10)
 		windowSurfaceObj.blit(scoreSurface, scoreRect)
 				
+		
+				
 		#get events
 		events = pygame.event.get()
 		for event in events:
@@ -272,7 +284,8 @@ while True:	#keep repeating the game until the user wants to quit
 					quit()
 		
 		#get movement of copter
-		accel = controls.getUpAccel(events) - DOWN_ACCEL
+		accelUp = controls.getUpAccel(events)
+		accel = accelUp - DOWN_ACCEL
 		heliSpeed += accel
 		if heliSpeed > HELI_MAX_SPEED:
 			heliSpeed = HELI_MAX_SPEED
@@ -280,6 +293,12 @@ while True:	#keep repeating the game until the user wants to quit
 			heliSpeed = -HELI_MAX_SPEED;
 			
 		heliHeight += heliSpeed * HELI_SPEED
+		
+		#draw the power / up acceleration meter
+		pygame.draw.rect(windowSurfaceObj, powerOutlineColor, (POWER_PADDING, SCREEN_HEIGHT - POWER_PADDING, POWER_WIDTH, -POWER_HEIGHT), 5)
+		pygame.draw.rect(windowSurfaceObj, powerColor, (POWER_PADDING + POWER_OUTLINE_THICKNESS, \
+					SCREEN_HEIGHT - POWER_PADDING -POWER_OUTLINE_THICKNESS, \
+					(POWER_WIDTH - 2* POWER_OUTLINE_THICKNESS) * accelUp , -(POWER_HEIGHT - 2 * POWER_OUTLINE_THICKNESS)))
 		
 		#advance the screen
 		for _ in range(CAVE_SPEED):
