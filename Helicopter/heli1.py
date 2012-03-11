@@ -132,7 +132,7 @@ class DigitalMuscleControls():
 	def __init__(self):
 		#get the user to train the system
 		self.data = []
-		self.channel = 1
+		self.channel = 2
 		
 		displayString('Connecting to Bluetooth...')
 		
@@ -194,8 +194,8 @@ class CaveGeneration():
 			
 		return (self.top, self.top + self.caveHeight)
 		
-controlType = ControlType.KEYBOARD
-#controlType = ControlType.MUSCLE_ANALOG
+#controlType = ControlType.KEYBOARD
+controlType = ControlType.MUSCLE_ANALOG
 #controlType = ControlType.MUSCLE_DIGITAL
 
 pygame.init()
