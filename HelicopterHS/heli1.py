@@ -233,21 +233,39 @@ def onCrash():
 			
 		fpsClock.tick(30)
 		
-	highScore.save(name, score)
+	highScore.addScore(name, score)
 	
 	#get rid of the previous text
 	draw()	
 	
 	#display previous high scores
-	scores = highScore.get()
+	scores = highScore.getScores()
 	
+	hsSurface = fontObj.render('High Scores', False, scoreColor)
+	hsRect = hsSurface.get_rect()
+	hsRect.topleft = (80, 10)
+	windowSurfaceObj.blit(hsSurface, hsRect)
+		
 	for i, (hName, hScore) in enumerate(scores):
-		replaySurface = smallFontObj.render(nameLine % name, False, scoreColor)
-		replayRect = replaySurface.get_rect()
-		replayRect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 30)
-		windowSurfaceObj.blit(replaySurface, replayRect)
+		hsSurface = smallFontObj.render(hName + ' '*(40 - len(hName) - len(str(hScore))) + str(hScore), False, scoreColor)
+		hsRect = hsSurface.get_rect()
+		hsRect.topleft = (80, 50 + i * 30)
+		windowSurfaceObj.blit(hsSurface, hsRect)
 		
+	pygame.display.update()
 		
+	pressedEnter = False
+	while not pressedEnter:
+		events = pygame.event.get()
+		
+		for event in events:
+			if event.type == QUIT:
+				quit()
+			elif event.type == KEYDOWN:
+				if event.key == K_ESCAPE:
+					quit()
+				elif event.key == K_RETURN:
+					pressedEnter = True
 	
 controlType = ControlType.KEYBOARD
 #controlType = ControlType.MUSCLE_ANALOG

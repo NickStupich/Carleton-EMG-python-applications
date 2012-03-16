@@ -17,21 +17,22 @@ class HighScore():
 			print 'making new file...'
 			
 		if file:
-			self.scores = [line.split(delim) for line in file]
+			self.scores = [line.strip('\n').split(delim) for line in file]
 			file.close()
 		else:
 			self.scores = []
 			
-		self.scores.sort(cmp = lambda x, y: cmp(x[1], y[1]))
+		self.scores.sort(cmp = lambda x, y: cmp(int(x[1]), int(y[1])), reverse = True)
 		
 	def saveScores(self):
-		file = open(self.filename)
+		file = open(self.filename, 'w')
 		for name, score in self.scores:
 			file.write(name + delim + str(score) + '\n')
 			
 		file.close()
 		
-	def addScore(self, score, username):
+	def addScore(self, username, score):
 		self.scores.append((username, score))
+		self.scores.sort(cmp = lambda x, y: cmp(int(x[1]), int(y[1])), reverse = True)
 		self.saveScores()
 		
