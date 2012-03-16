@@ -66,7 +66,7 @@ class AnalogMuscleControls():
 		self.saveData = False
 		
 		self.ser = continuousMuscleTesting.SerialCommunication(self.__trainCallback)	
-		self.ser.Start(1<<self.channel)	#single channel, specified above
+		self.ser.Start(self.channel)	#single channel, specified above
 		
 		for message, output in messageAndOutputs:
 			for deciSecondsLeft in range(warnTime * 10, 0, -1):
@@ -94,7 +94,7 @@ class AnalogMuscleControls():
 		for _ in range(3):	
 			try:
 				self.ser = continuousMuscleTesting.SerialCommunication(self.__testCallback)	
-				self.ser.Start(1<<(self.channel))	#single channel, specified above
+				self.ser.Start(self.channel)	#single channel, specified above
 				self.connected = True
 				while not self.currentInput:	#wait for data to show up before we start trying to process that data
 					time.sleep(0.1)
@@ -114,6 +114,7 @@ class AnalogMuscleControls():
 			self.ser.Stop()
 	
 	def __trainCallback(self, input):
+		print sum(input)
 		self.data.append((input, self.currentOutput))
 		
 	def __testCallback(self, input):
@@ -294,8 +295,8 @@ def onCrash():
 				elif event.key == K_RETURN:
 					pressedEnter = True
 	
-controlType = ControlType.KEYBOARD
-#controlType = ControlType.MUSCLE_ANALOG
+#controlType = ControlType.KEYBOARD
+controlType = ControlType.MUSCLE_ANALOG
 #controlType = ControlType.MUSCLE_DIGITAL
 
 pygame.init()
