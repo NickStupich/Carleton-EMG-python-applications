@@ -6,7 +6,7 @@ import time
 import continuousMuscleTesting
 import binaryMuscleTesting
 import functools
-
+import math
 import highScore
 
 def quit():
@@ -185,7 +185,7 @@ class DigitalMuscleControls():
 class CaveGeneration():
 	def __init__(self):
 		self.top = 20
-		self.caveHeight = SCREEN_HEIGHT - 100
+		self.caveHeight = SCREEN_HEIGHT - STARTING_CAVE_HEIGHT
 		
 	def getNextDims(self):
 		self.top = int(self.top + CAVE_SLOPE * (random.random()* 1000 - 500))
@@ -196,7 +196,33 @@ class CaveGeneration():
 			
 		return (self.top, self.top + self.caveHeight)
 		
+class CaveGeneration2():
+	def __init__(self):
+		self.top = 20
+		self.caveHeight = SCREEN_HEIGHT - STARTING_CAVE_HEIGHT
+		self.slope = 0
+		self.maxSlope = 2.0
+		self.randomness = 0.5
 		
+	def getNextDims(self):
+		self.slope += (random.random() - 0.5) * 0.5
+		if self.slope > self.maxSlope:
+			self.slope = self.maxSlope
+		elif self.slope < -self.maxSlope:
+			self.slope = -self.maxSlope
+			
+		self.top += self.slope 
+		
+		if self.top < 0:
+			self.top = 0
+			self.slope = 0
+		elif self.top + self.caveHeight > SCREEN_HEIGHT:
+			self.top = SCREEN_HEIGHT - self.caveHeight
+			self.slope = 0
+			
+		return (self.top, self.top + self.caveHeight)
+
+
 def onCrash():
 	gameOverSurface = fontObj.render(str('Game Over'), False, scoreColor)
 	gameOverRect = gameOverSurface.get_rect()
@@ -233,7 +259,8 @@ def onCrash():
 			
 		fpsClock.tick(30)
 		
-	highScore.addScore(name, score)
+	if len(name) > 0:
+		highScore.addScore(name, score)
 	
 	#get rid of the previous text
 	draw()	
@@ -285,6 +312,8 @@ CAVE_SPEED = 5
 DOWN_ACCEL = 0.5
 CAVE_SLOPE = 0.01
 HELI_MAX_SPEED = 5
+STARTING_CAVE_HEIGHT = 100
+MAX_CAVE_HEIGHT = 400
 
 POWER_PADDING = 20
 POWER_WIDTH = 100
@@ -322,7 +351,6 @@ def draw():
 	scoreRect.topleft = (10, 10)
 	windowSurfaceObj.blit(scoreSurface, scoreRect)
 
-caveGenerator = CaveGeneration()
 if controlType == ControlType.KEYBOARD:
 	controls = KeyboardControls()
 elif controlType == ControlType.MUSCLE_ANALOG:
@@ -332,6 +360,7 @@ elif controlType == ControlType.MUSCLE_DIGITAL:
 	
 while True:	#keep repeating the game until the user wants to quit
 
+	caveGenerator = CaveGeneration2()
 	caveIndex = 0
 	caveSpots = [caveGenerator.getNextDims() for _ in range(SCREEN_WIDTH)]
 
@@ -374,6 +403,8 @@ while True:	#keep repeating the game until the user wants to quit
 		pygame.draw.rect(windowSurfaceObj, powerColor, (POWER_PADDING + POWER_OUTLINE_THICKNESS, \
 					SCREEN_HEIGHT - POWER_PADDING -POWER_OUTLINE_THICKNESS, \
 					(POWER_WIDTH - 2* POWER_OUTLINE_THICKNESS) * accelUp , -(POWER_HEIGHT - 2 * POWER_OUTLINE_THICKNESS)))
+		
+		caveGenerator.caveHeight = SCREEN_HEIGHT - (STARTING_CAVE_HEIGHT + (MAX_CAVE_HEIGHT - STARTING_CAVE_HEIGHT) * (1.0 - math.exp(-float(score) / 200.0)))
 		
 		#advance the screen
 		for _ in range(CAVE_SPEED):
