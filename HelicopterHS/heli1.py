@@ -201,7 +201,7 @@ class CaveGeneration2():
 		self.top = 20
 		self.caveHeight = SCREEN_HEIGHT - STARTING_CAVE_HEIGHT
 		self.slope = 0
-		self.maxSlope = 2.0
+		self.maxSlope = 1.5
 		self.randomness = 0.5
 		
 	def getNextDims(self):
