@@ -223,7 +223,6 @@ class CaveGeneration2():
 			
 		return (self.top, self.top + self.caveHeight)
 
-
 def onCrash():
 	gameOverSurface = fontObj.render(str('Game Over'), False, scoreColor)
 	gameOverRect = gameOverSurface.get_rect()
@@ -295,8 +294,8 @@ def onCrash():
 				elif event.key == K_RETURN:
 					pressedEnter = True
 	
-#controlType = ControlType.KEYBOARD
-controlType = ControlType.MUSCLE_ANALOG
+controlType = ControlType.KEYBOARD
+#controlType = ControlType.MUSCLE_ANALOG
 #controlType = ControlType.MUSCLE_DIGITAL
 
 pygame.init()
